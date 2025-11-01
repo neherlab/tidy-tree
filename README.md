@@ -222,16 +222,6 @@ All sequences must be pre-aligned with the same length
 Check that lineage names match exactly between the guide tree, founders, and assignments files
 ```
 
-## Citation
-
-If you use this tool, please cite:
-
-- IQ-TREE: Nguyen et al. (2015) IQ-TREE: A fast and effective stochastic algorithm for estimating maximum likelihood phylogenies. Mol Biol Evol, 32:268-274.
-
 ## License
 
 MIT License - see LICENSE file for details
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues or pull requests.
