@@ -1,0 +1,11 @@
+# Sequence to lineage assignments
+seq_id	lineage
+seq001	LineageA
+seq002	LineageA
+seq003	LineageA
+seq004	LineageB
+seq005	LineageB
+seq006	LineageB
+seq007	LineageC
+seq008	LineageC
+seq009	LineageC
