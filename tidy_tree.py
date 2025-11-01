@@ -95,6 +95,7 @@ def parse_arguments():
         action='store_true',
         help='Keep founder sequences as leaves in the final tree'
     )
+    parser.add_argument('--root-lineage', default=None, help='Root lineage for the tree')
     return parser.parse_args()
 
 
@@ -129,9 +130,16 @@ def load_assignments(
     return assignments
 
 
-def parse_guide_tree(newick_path: str) -> LineageNode:
+def parse_guide_tree(newick_path: str, root_lineage: str = None) -> LineageNode:
     """Parse the lineage guide tree and build LineageNode structure."""
     tree = Phylo.read(newick_path, 'newick')
+    if root_lineage:
+        matches = [x for x in tree.find_clades(name=root_lineage)]
+        if matches:
+            tree.root = matches[0]
+            print(f"Re-rooted lineage tree to '{root_lineage}'")
+        else:
+            print(f"Warning: Specified root lineage '{root_lineage}' not found. Using original root.")
 
     # Convert Bio.Phylo tree to LineageNode structure
     def build_lineage_tree(phylo_node, parent=None):
@@ -422,7 +430,7 @@ def main():
     print(f"  Loaded {len(assignments)} assignments")
 
     print("Parsing lineage guide tree...")
-    lineage_root = parse_guide_tree(args.guide_tree)
+    lineage_root = parse_guide_tree(args.guide_tree, args.root_lineage)
 
     # Prepare lineage structure
     print("\nAssigning sequences to lineages...")
