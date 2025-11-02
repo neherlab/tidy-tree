@@ -87,7 +87,7 @@ def parse_arguments():
     )
     parser.add_argument(
         '--iqtree-args',
-        default='',
+        default='--ninit 2 -n 2 --epsilon 0.05',
         help='Additional arguments to pass to IQ-TREE'
     )
     parser.add_argument(
@@ -358,12 +358,14 @@ def graft_subtree(
             child_node.clades = []  # Clear clades to avoid duplication
             clades_to_graft.append(child_node)  # Retain the founder as a leaf
         else:
-            clades_to_graft = [child_tree.root]
+            clades_to_graft = child_tree.root.clades
     elif child_tree.root != child_node:
-        clades_to_graft = [c for c in child_tree.root.clades if c.name != connection_point_id or keep_founders]
+        clades_to_graft = [c for c in child_tree.root.clades if (c.name != connection_point_id) or keep_founders]
 
     # Replace parent_node's children with child_node's children
     parent_node.clades = list(clades_to_graft)
+    if parent_node.name:
+        parent_node.name = parent_node.name + "_internal"
 
 
 def stitch_subtrees(
