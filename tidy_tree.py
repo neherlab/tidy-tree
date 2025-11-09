@@ -21,6 +21,7 @@ from Bio.SeqRecord import SeqRecord
 class LineageNode:
     """Represents a node in the lineage guide tree."""
     def __init__(self, name: str):
+        self.tree = None
         self.name = name
         self.parent = None
         self.children = []
@@ -41,8 +42,8 @@ def parse_arguments():
     )
     parser.add_argument(
         '--founder-sequences', '-f',
-        required=True,
-        help='Aligned lineage founder sequences in FASTA format'
+        required=False,
+        help='Aligned lineage founder sequences in FASTA format (if not provided in alignment)'
     )
     parser.add_argument(
         '--guide-tree', '-g',
@@ -142,17 +143,18 @@ def parse_guide_tree(newick_path: str, root_lineage: str = None) -> LineageNode:
             print(f"Warning: Specified root lineage '{root_lineage}' not found. Using original root.")
 
     # Convert Bio.Phylo tree to LineageNode structure
-    def build_lineage_tree(phylo_node, parent=None):
+    def build_lineage_tree(phylo_node, parent=None, save_phylo_node=False):
         node = LineageNode(phylo_node.name or f"internal_{id(phylo_node)}")
         node.parent = parent
-
+        if save_phylo_node:
+            node.tree = phylo_node
         for child in phylo_node.clades:
             child_node = build_lineage_tree(child, node)
             node.children.append(child_node)
 
         return node
 
-    return build_lineage_tree(tree.root)
+    return build_lineage_tree(tree.root, save_phylo_node=True)
 
 
 def assign_sequences_to_lineages(
@@ -419,9 +421,20 @@ def main():
     sequences = load_sequences(args.alignment)
     print(f"  Loaded {len(sequences)} sequences")
 
-    print("Loading founder sequences...")
-    founders = load_sequences(args.founder_sequences)
-    print(f"  Loaded {len(founders)} founder sequences")
+    print("Parsing lineage guide tree...")
+    lineage_root = parse_guide_tree(args.guide_tree, args.root_lineage)
+
+    if args.founder_sequences:
+        print("Loading founder sequences...")
+        founders = load_sequences(args.founder_sequences)
+        print(f"  Loaded {len(founders)} founder sequences")
+    else:
+        founders = {}
+        lineages_in_guide_tree = [clade.name for clade in lineage_root.tree.find_clades() if clade.name]
+        for seq, seq_id in sequences.items():
+            if seq_id in lineages_in_guide_tree:
+                founders[seq_id] = sequences[seq_id]
+        print(f"  gathered {len(founders)} founder sequences from alignment")
 
     print("Loading sequence-to-lineage assignments...")
     assignments = load_assignments(
@@ -430,9 +443,6 @@ def main():
         args.lineage_column
     )
     print(f"  Loaded {len(assignments)} assignments")
-
-    print("Parsing lineage guide tree...")
-    lineage_root = parse_guide_tree(args.guide_tree, args.root_lineage)
 
     # Prepare lineage structure
     print("\nAssigning sequences to lineages...")
