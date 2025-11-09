@@ -431,9 +431,9 @@ def main():
     else:
         founders = {}
         lineages_in_guide_tree = [clade.name for clade in lineage_root.tree.find_clades() if clade.name]
-        for seq, seq_id in sequences.items():
+        for seq_id, seq in sequences.items():
             if seq_id in lineages_in_guide_tree:
-                founders[seq_id] = sequences[seq_id]
+                founders[seq_id] = sequences[seq]
         print(f"  gathered {len(founders)} founder sequences from alignment")
 
     print("Loading sequence-to-lineage assignments...")
