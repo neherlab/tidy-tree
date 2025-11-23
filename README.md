@@ -72,6 +72,9 @@ python tidy_tree.py \
 - `--model`: Substitution model for IQ-TREE (default: `GTR+G`)
 - `--threads`: Number of CPU threads for IQ-TREE (default: 1)
 - `--iqtree-args`: Additional arguments to pass to IQ-TREE
+- `--ignore-missing-founders`: Ignore lineages in guide tree that lack founder sequences (by default, the script will error if founders are missing)
+- `--keep-founders`: Keep founder sequences as leaves in the final tree
+- `--root-lineage`: Root lineage for the tree
 
 ## Input File Formats
 
@@ -194,16 +197,6 @@ The program outputs a single Newick tree file containing:
 - All input sequences
 - All lineage founder sequences
 - Tree topology reflecting both within-lineage relationships and between-lineage relationships
-
-## Limitations and Considerations
-
-1. **Alignment quality**: The quality of the output tree depends heavily on the quality of the input alignment
-
-2. **Sequence count**: Each lineage should have at least one sequence (plus founder and child founders) to build a subtree. Lineages with fewer than 3 total sequences will be skipped.
-
-3. **Grafting approach**: The current grafting method replaces founder sequence leaves in parent trees with their corresponding subtrees. This is a simplified approach and may not be biologically optimal in all cases.
-
-4. **Branch lengths**: Branch length interpretation may be complex due to the stitching process. Consider this when interpreting divergence times.
 
 ## Troubleshooting
 
