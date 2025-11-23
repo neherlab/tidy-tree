@@ -461,7 +461,7 @@ def main():
     # Prepare lineage structure
     print("\nAssigning sequences to lineages...")
     assign_sequences_to_lineages(lineage_root, assignments, sequences)
-    assign_founders_to_lineages(lineage_root, founders)
+    assign_founders_to_lineages(lineage_root, founders, args.ignore_missing_founders)
 
 
     # Build and stitch trees
