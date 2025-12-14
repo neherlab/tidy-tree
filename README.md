@@ -166,6 +166,21 @@ python tidy_tree.py \
   --threads 4
 ```
 
+With additional context:
+```bash
+python tidy_tree.py \
+  --alignment examples/sequences.fasta \
+  --founder-sequences examples/founders.fasta \
+  --guide-tree examples/guide_tree.nwk \
+  --lineage-assignments examples/assignments.tsv \
+  --output-tree examples/output_tree.nwk \
+  --contextual-sequences examples/context.fasta \
+  --root-context c1 \
+  --threads 4
+```
+
+
+
 ## Advanced Options
 
 ### Substitution Models

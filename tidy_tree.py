@@ -46,6 +46,11 @@ def parse_arguments():
         help='Aligned lineage founder sequences in FASTA format (if not provided in alignment)'
     )
     parser.add_argument(
+        '--contextual-sequences', '-c',
+        required=False,
+        help='Additional contextual sequences to include in the final tree (FASTA format)'
+    )
+    parser.add_argument(
         '--guide-tree', '-g',
         required=True,
         help='Lineage guide tree in Newick format'
@@ -97,6 +102,7 @@ def parse_arguments():
         help='Keep founder sequences as leaves in the final tree'
     )
     parser.add_argument('--root-lineage', default=None, help='Root lineage for the tree')
+    parser.add_argument('--root-context', default=None, help='Sequence from the context on which to root the tree')
     parser.add_argument(
         '--ignore-missing-founders',
         action='store_true',
@@ -284,6 +290,7 @@ def build_subtree(
     - Sequences assigned to this lineage
     - Founder sequence of this lineage
     - Founder sequences of child lineages
+    - Contextual sequences (for root lineage only)
     """
     # Collect sequences for this subtree
     subtree_seqs = []
@@ -391,7 +398,9 @@ def stitch_subtrees(
     model: str,
     threads: int,
     extra_args: str,
-    keep_founders: bool = False
+    keep_founders: bool = False,
+    root_context: str = None,
+    contextual_sequences: Dict[str, SeqRecord] = None
 ) -> Optional[Phylo.BaseTree.Tree]:
     """
     Stitch subtrees together following the guide tree structure.
@@ -422,8 +431,17 @@ def stitch_subtrees(
                     print(f"Skipping grafting for {child.name} onto {node.name} (missing subtree or founder)")
 
     process_node(root)
-    root.subtree.ladderize()
-    return root.subtree
+
+    if contextual_sequences and root_context and root.subtree:
+        result_tree = run_iqtree(list(contextual_sequences.values()) + [all_sequences[root.name]], iqtree_path, model, threads, root=root_context, extra_args=extra_args)
+        if result_tree:
+            print(f"Grafting context subtree onto root at {root_context}")
+            graft_subtree(result_tree, root.subtree, root.founder_seq.id, keep_founders)
+    else:
+        result_tree = root.subtree
+
+    result_tree.ladderize()
+    return result_tree
 
 
 def main():
@@ -434,6 +452,13 @@ def main():
     print("Loading sequences...")
     sequences = load_sequences(args.alignment)
     print(f"  Loaded {len(sequences)} sequences")
+
+    # Load contextual sequences if provided
+    contextual_sequences = {}
+    if args.contextual_sequences:
+        print("Loading contextual sequences...")
+        contextual_sequences = load_sequences(args.contextual_sequences)
+        print(f"  Loaded {len(contextual_sequences)} contextual sequences")
 
     print("Parsing lineage guide tree...")
     lineage_root = parse_guide_tree(args.guide_tree, args.root_lineage)
@@ -466,7 +491,7 @@ def main():
 
     # Build and stitch trees
     print("\nBuilding subtrees using IQ-TREE...")
-    all_sequences = {**sequences, **founders}
+    all_sequences = {**sequences, **founders, **contextual_sequences}
 
     final_tree = stitch_subtrees(
         lineage_root,
@@ -475,7 +500,9 @@ def main():
         args.model,
         args.threads,
         args.iqtree_args,
-        args.keep_founders
+        args.keep_founders,
+        args.root_context,
+        contextual_sequences
     )
 
     if final_tree is None:
